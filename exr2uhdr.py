@@ -142,7 +142,7 @@ def main():
     metadata_file.close()
 
     # Start ultrahdr_app
-    os.system(f'wsl.exe ultrahdr_app -m 0 -i "{sdr_filename}" -g "{
+    os.system(f'ultrahdr_app -m 0 -i "{sdr_filename}" -g "{
         gain_filename}" -f "{metadata_filename}" -z "{args.output_file}"')
 
     # Clean-up
