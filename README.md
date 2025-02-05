@@ -2,7 +2,7 @@
 
 `exr2uhdr` is a tool for converting EXR files to [gainmap.js](https://github.com/MONOGRID/gainmap-js) Ultra HDR files.
 
-Unlike the [free online encoder](https://gainmap-creator.monogrid.com/), this tool operates from the command line without requiring a browser..
+Unlike the [free online encoder](https://gainmap-creator.monogrid.com/), this tool operates from the command line without requiring a browser.
 
 ## Installation
 
