@@ -6,7 +6,7 @@ Unlike the [free online encoder](https://gainmap-creator.monogrid.com/), this to
 
 ## Installation
 
-These instructions are for UNIX systems.
+These instructions are for a UNIX system.
 
 1. Make sure Git, CMake, Python 3 and PIP are installed on your system.
 2. Install [libultrahdr](https://github.com/google/libultrahdr):
