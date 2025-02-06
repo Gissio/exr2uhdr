@@ -7,7 +7,6 @@
 
 import argparse
 import os
-import shutil
 
 import numpy as np
 import OpenEXR
@@ -98,10 +97,9 @@ def main():
         gain_max = np.max(input_map)
     else:
         gain_max = args.gain_max
+    gain_max = max(gain_max, 1.0001)
     gain_max_log = np.log2(gain_max)
     gain_gamma = args.gain_gamma
-
-    print(f'gain-max: {gain_max}')
 
     # Build SDR map
     sdr_map = input_map
@@ -115,42 +113,39 @@ def main():
 
     sdr_filename = '__uhdr_sdr.jpg'
     sdr_image.save(sdr_filename,
-                quality=args.sdr_quality,
-                optimize=True)
+                   quality=args.sdr_quality,
+                   optimize=True)
 
-    # Build gain map (only is HDR required)
-    if gain_max > 1:
-        gain_map = (input_map + 1e-6) / (sdr_map + 1e-6)
-        gain_map = np.log2(gain_map) / gain_max_log
-        gain_map = saturate(gain_map)
-        gain_map_gammacorrected = apply_gamma(gain_map, gain_gamma)
-        gain_image = get_pil_image(gain_map_gammacorrected)
+    # Build gain map
+    gain_map = (input_map + 1e-6) / (sdr_map + 1e-6)
+    gain_map = np.log2(gain_map) / gain_max_log
+    gain_map = saturate(gain_map)
+    gain_map_gammacorrected = apply_gamma(gain_map, gain_gamma)
+    gain_image = get_pil_image(gain_map_gammacorrected)
 
-        gain_filename = '__uhdr_gain.jpg'
-        gain_image.save(gain_filename,
-                        quality=args.gain_quality,
-                        optimize=True)
+    gain_filename = '__uhdr_gain.jpg'
+    gain_image.save(gain_filename,
+                    quality=args.gain_quality,
+                    optimize=True)
 
-        # Build metadata
-        metadata_filename = '__uhdr_metadata.cfg'
-        metadata_file = open(metadata_filename, 'wt')
-        metadata_file.write(f'--maxContentBoost 6.0 6.0 6.0\n')
-        metadata_file.write(f'--minContentBoost 1.0 1.0 1.0\n')
-        metadata_file.write(f'--gamma {gain_gamma} {gain_gamma} {
-            gain_gamma}\n')
-        metadata_file.write(f'--offsetSdr 0.0 0.0 0.0\n')
-        metadata_file.write(f'--offsetHdr 0.0 0.0 0.0\n')
-        metadata_file.write(f'--hdrCapacityMin 0.0\n')
-        metadata_file.write(f'--hdrCapacityMax {gain_max_log}\n')
-        metadata_file.write(f'--useBaseColorSpace 1\n')
-        metadata_file.close()
+    # Build metadata
+    metadata_filename = '__uhdr_metadata.cfg'
+    metadata_file = open(metadata_filename, 'wt')
+    metadata_file.write(
+        f'--maxContentBoost {gain_max} {gain_max} {gain_max}\n')
+    metadata_file.write(f'--minContentBoost 1.0 1.0 1.0\n')
+    metadata_file.write(f'--gamma {gain_gamma} {gain_gamma} {
+        gain_gamma}\n')
+    metadata_file.write(f'--offsetSdr 0.0 0.0 0.0\n')
+    metadata_file.write(f'--offsetHdr 0.0 0.0 0.0\n')
+    metadata_file.write(f'--hdrCapacityMin 1.0\n')
+    metadata_file.write(f'--hdrCapacityMax {gain_max}\n')
+    metadata_file.write(f'--useBaseColorSpace 1\n')
+    metadata_file.close()
 
-        # Build Ultra HDR JPEG file
-        os.system(f'ultrahdr_app -m 0 -i "{sdr_filename}" -g "{
-            gain_filename}" -f "{metadata_filename}" -z "{args.output_file}"')
-
-    else:
-        shutil.copy(sdr_image, args.output_file)
+    # Build Ultra HDR JPEG file
+    os.system(f'ultrahdr_app -m 0 -i "{sdr_filename}" -g "{
+        gain_filename}" -f "{metadata_filename}" -z "{args.output_file}"')
 
     # Clean-up
     if os.path.exists(sdr_filename):
